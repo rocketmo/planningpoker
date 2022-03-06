@@ -10,8 +10,8 @@ var _vm = function() {
             return false;
         }
         var ret = true;
-        $.each(this.users(), function(i, user) {
-            if (user.vote() === undefined) {
+        this.users().forEach(user => {
+            if (user && user.vote() === undefined) {
                 ret = false;
             }
         });
@@ -39,8 +39,8 @@ var _vm = function() {
             }
         }
         if (users instanceof Array) {
-            $.each(users, function(i, u) {
-                prepare(u);
+            users.forEach(user => {
+                prepare(user);
             });
         } else {
             prepare(users);
@@ -50,9 +50,9 @@ var _vm = function() {
 
     this.init = function() {
         // replace it with another loader?
-        this.prepareSocket($.proxy(function() {
+        this.prepareSocket(() => {
             this.socketPreloaderVisible(false);
-        }, this));
+        });
     };
 
     this.prepareSocket = function(callback) {
@@ -61,61 +61,59 @@ var _vm = function() {
             callback && callback();
         });
 
-        this.socket.on('hello', $.proxy(function(data) {
+        this.socket.on('hello', data => {
             console.log('hello', data.id);
             this.userId(data.id);
-        }, this));
+        });
 
-        this.socket.on('server_error', $.proxy(function(data) {
+        this.socket.on('server_error', data => {
             alert('Server returned error: ' + data.msg);
             this.userNameLoaderVisible(false);
-        }, this));
+        });
 
         this.socket.on('error', function(data) {
             console.log('socket error:', data);
         });
 
-        this.socket.on('welcome', $.proxy(function(data) {
+        this.socket.on('welcome', data => {
             console.log('welcome', data);
             this.roomName(data.roomName);
             this.users(this.prepareUserData(data.users));
             this.userNameLoaderVisible(false);
             this.loginBoxVisible(false);
-        }, this));
+        });
 
-        this.socket.on('joined', $.proxy(function(data) {
+        this.socket.on('joined', data => {
             // skip ourselves
             if (data.id == this.userId()) { 
                 return;
             }
 
             this.users.push(this.prepareUserData(data));
-        }, this));
+        });
 
-        this.socket.on('user_voted', $.proxy(function(data) {
+        this.socket.on('user_voted', data => {
             // catch voted user and set 'vote' field
-            $.each(this.users(), function(i, u) {
-                if (u.id == data.id) {
-                    u.vote(data.vote);
+            this.users().forEach(user => {
+                if (user.id == data.id) {
+                    user.vote(data.vote);
                 }
             });
-        }, this));
+        });
 
-        this.socket.on('reset', $.proxy(function() {
-            $.each(this.users(), function(i, u) {
-                u.vote(undefined);
+        this.socket.on('reset', () => {
+            this.users().forEach(user => {
+                user && user.vote(undefined);
             });
-        }, this));
+        });
 
-        this.socket.on('quit', $.proxy(function(data) {
+        this.socket.on('quit', data => {
             // remove user from list
             console.log('remove user', data);
             this.users(
-                $.map(this.users(), function(u) {
-                    return u.id == data.id ? undefined : u;
-                })
+                this.users().filter(user => user && user.id !== data.id)
             );
-        }, this));
+        });
     }
 
     this.login = function() {
@@ -139,24 +137,23 @@ var _vm = function() {
         alert('not implemented');
     }
 
-
     // dom elements listeners
     this.onEnterClick = function() {
         var rn = prompt("Enter room name");
         if (!rn || /^\s*$/.test(rn)) {
             return;
         }
-        this.onAfterLogin = $.proxy(function() {
+        this.onAfterLogin = () => {
             this.socket.emit('join', {roomName: rn});
-        }, this);
+        };
         this.login();
         // see this.userId.subsribe to follow up next steps
     }
 
     this.onCreateRoomClick = function() {
-        this.onAfterLogin = $.proxy(function() { 
+        this.onAfterLogin = () => { 
             this.socket.emit('join');
-        }, this);
+        };
         this.login();
         // see this.userId.subsribe to follow up next steps
     }
@@ -171,7 +168,8 @@ var _vm = function() {
 
 }
 
-$(function() {
+document.addEventListener('DOMContentLoaded', () => {
     ko.applyBindings(window.vm = new _vm());
-    vm.init();
+    vm.init(); 
+    console.log('%cAPP READY', 'color: green');
 });
