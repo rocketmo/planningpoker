@@ -13,30 +13,35 @@
         <div class="login" data-bind="visible: loginBoxVisible">
             <div class="logo">Planning Poker</div>
             <div class="socketPreloader" data-bind="visible: socketPreloaderVisible">Connecting to server...</div>
-            <div data-bind="visible: !socketPreloaderVisible()">
-                <input type="text" placeholder="username" size="22" 
-                    data-bind="value: userName, css: { loading: userNameLoaderVisible }, attr: { disabled: userNameLoaderVisible }"/><br/>
-                <button data-bind="click: onCreateRoomClick, attr: { disabled: userNameLoaderVisible }">create new room</button>
-                <button data-bind="click: onEnterClick, attr: { disabled: userNameLoaderVisible }">join existing</button>
+            <div class="login-form" data-bind="visible: !socketPreloaderVisible()">
+                <input type="text" class="--with-shadow" placeholder="your username" size="22" 
+                    data-bind="value: userName, css: { loading: userNameLoaderVisible }, attr: { disabled: userNameLoaderVisible }"/>
+                <button class="--with-shadow" data-bind="click: onCreateRoomClick, attr: { disabled: userNameLoaderVisible }">create new room</button>
+                <button class="--with-shadow" data-bind="click: onEnterClick, attr: { disabled: userNameLoaderVisible }">join existing</button>
             </div>
         </div>
 
         <div class="poker" data-bind="visible: !loginBoxVisible()">
             <div class="roomInfo">
                 <div class="btns">
-                    <button data-bind="click: resetRoom">Reset All Votes</button>
-                    <!-- <button data-bind="click: showInviteDialog">invite</button> -->
+                    <button class="--with-shadow" data-bind="click: resetRoom">Reset All Votes</button>
                 </div>
-                Hello <span class="userName" data-bind="text: userName()"></span>, you're in room
-                <a class="roomName" title="click to copy" data-bind="click: onClickRoomNumber, attr: { room: roomName() }"><span data-bind="text: roomName()"></span></a>
+                <div class="info">
+                    Hello <span class="userName" data-bind="text: userName()"></span>, you're in room
+                    <a class="roomName" title="click to copy" data-bind="click: onClickRoomNumber, attr: { room: roomName() }"><span data-bind="text: roomName()"></span>.</a>
+                </div>
             </div>
-            <div class="voteArea" data-bind="foreach: voteCardValues">
-                <div class="voteCard" data-bind="text: $data, click: $parent.onVoteCardClick"></div>
+            <div class="votes area" data-bind="foreach: voteCardValues">
+                <div class="vote card" tabindex="0" data-bind="text: $data, click: $parent.onVoteCardClick"></div>
             </div>
-            <div class="usersArea" data-bind="foreach: users">
-                <div class="userCard" data-bind="css: { voted: $data.vote() !== undefined }">
-                    <div class="username" data-bind="text: name"></div>
-                    <div class="vote" data-bind="text: +$data.vote() , visible: $parent.allVoted()"></div>
+            <div class="users area" data-bind="foreach: users">
+                <div class="user card" data-bind="css: { voted: $data.vote() !== undefined , allVoted: $parent.allVoted()}">
+                    <div class="front">
+                        <div class="vote" data-bind="text: $data.vote() !== undefined ? +$data.vote() : ''"></div>
+                    </div>
+                    <div class="back">
+                        <div class="username" data-bind="text: name"></div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,7 +1,8 @@
 var _vm = function() {
     this.socket = null;
 
-    this.voteCardValues = [0, 0.5, 1, 1.5, 2, 3, 5, 8, 13];
+    this.voteCardValues = [0, 0.5, 1, 2, 3, 5, 8, 13];
+    this.isResetting = ko.observable(false);
 
     // every user { id, name, vote() } 
     this.users = ko.observableArray();
@@ -15,7 +16,17 @@ var _vm = function() {
                 ret = false;
             }
         });
-        return ret;
+
+        if (ret) {
+            // give it a nudge - since knockout doesn't do css vars, have to go thru DOM methods
+            document.querySelectorAll('.user.card').forEach(card => {
+                if (!card.style.getPropertyValue('--card-angle')) {
+                    const newCardAngle = (Math.round((Math.random() * 8) - 4)) + 'deg';
+                    card.style.setProperty('--card-angle', newCardAngle);
+                }
+            });
+        }
+        return ret && !this.isResetting();
     }, this);
 
     this.userName = ko.observable();
@@ -52,6 +63,8 @@ var _vm = function() {
         // replace it with another loader?
         this.prepareSocket(() => {
             this.socketPreloaderVisible(false);
+
+            // TODO: Trigger focus on the input field
         });
     };
 
@@ -102,10 +115,35 @@ var _vm = function() {
         });
 
         this.socket.on('reset', () => {
-            this.users().forEach(user => {
-                user && user.vote(undefined);
-            });
+            // don't delay if all votes aren't tallied
+            const timeoutLength = this.allVoted() ? 500 : 0;
+
+            if (!!this._reset) {
+                clearTimeout(this._reset);
+                this._reset = null;
+                return;
+            }
+
+            // set resetting to true for a bit before removing scores
+            // to handle card flip animation
+            this.isResetting(true);
+            
+            this._reset = setTimeout(() => {
+                this.users().forEach(user => {
+                    user && user.vote(undefined);
+                });
+
+                this.isResetting(false);
+
+                // clear the nudges - since knockout doesn't do css vars, have to go thru DOM methods
+                document.querySelectorAll('.userCard').forEach(card => {
+                    card.style.setProperty('--card-angle', '');
+                });
+
+                this._reset = null;
+            }, timeoutLength);
         });
+        this._reset = null;
 
         this.socket.on('quit', data => {
             // remove user from list
