@@ -2,19 +2,21 @@
 
 <html lang="en">
     <head>
-        <title>planning poker</title>
+        <title>Planning Poker</title>
         <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
         <script src="//knockoutjs.com/downloads/knockout-3.0.0.js"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script src="poker.js"></script>
         <link rel="stylesheet" type="text/css" href="poker.css"/>
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
     </head>
     <body>
         <div class="login" data-bind="visible: loginBoxVisible">
             <div class="logo">Planning Poker</div>
             <div class="socketPreloader" data-bind="visible: socketPreloaderVisible">Connecting to server...</div>
             <div class="login-form" data-bind="visible: !socketPreloaderVisible()">
-                <input type="text" class="--with-shadow" placeholder="your username" size="22" 
+                <input type="text" class="username --with-shadow" placeholder="your username" 
                     data-bind="value: userName, css: { loading: userNameLoaderVisible }, attr: { disabled: userNameLoaderVisible }"/>
                 <button class="--with-shadow" data-bind="click: onCreateRoomClick, attr: { disabled: userNameLoaderVisible }">create new room</button>
                 <button class="--with-shadow" data-bind="click: onEnterClick, attr: { disabled: userNameLoaderVisible }">join existing</button>
@@ -35,12 +37,12 @@
                 <div class="vote card" tabindex="0" data-bind="text: $data, click: $parent.onVoteCardClick"></div>
             </div>
             <div class="users area" data-bind="foreach: users">
-                <div class="user card" data-bind="css: { voted: $data.vote() !== undefined , allVoted: $parent.allVoted()}">
+                <div class="user card" data-bind="css: { voted: $data.vote() !== undefined , flipped: $parent.allVoted()}">
                     <div class="front">
-                        <div class="vote" data-bind="text: $data.vote() !== undefined ? +$data.vote() : ''"></div>
+                        <div class="vote" data-bind="text: $data.vote() !== undefined ? +$data.vote() : '?'"></div>
                     </div>
                     <div class="back">
-                        <div class="username" data-bind="text: name"></div>
+                        <div class="username" data-bind="text: name, attr: { title: name }"></div>
                     </div>
                 </div>
             </div>

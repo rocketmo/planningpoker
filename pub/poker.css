@@ -22,7 +22,7 @@ html {
     min-height: 100vh;
 }
 
-body, input, button {
+body, .username, button {
     font-family: var(--default-fonts);
 }
 
@@ -78,13 +78,14 @@ body {
     margin: 10px auto;
 }
 
-.login input {
+.login .username {
     flex: 1 0 auto;
 
     border: none;
     padding: 5px 35px 5px 15px;
     font-size: 24px;
     border-radius: 6px;
+    background-color: var(--white);
 }
 
 .login .socketPreloader {
@@ -93,8 +94,8 @@ body {
     background: no-repeat no-repeat center 25px url(/img/loader.gif);
 }
 
-.login input.loading {
-    background: no-repeat no-repeat 95% center url(/img/loader.gif);
+.login .username.loading {
+    background: var(--white) no-repeat no-repeat 95% center url(/img/loader.gif);
 }
 
 .login button {
@@ -115,7 +116,6 @@ body {
 
     margin: 20px auto;
 }
-
 
 .roomInfo .info .roomName {
     color: var(--white);
@@ -217,21 +217,17 @@ body {
     transform: translateZ(-1px) rotateY(180deg);
     background-color: var(--white);
     text-shadow: none;
+    color: var(--front-text);
 
     box-shadow: inset 0 0 0 3px var(--white), 
                 inset 0 0 0 4px var(--black);
 }
 
-.users .user.voted .vote {
-    color: var(--front-text);
-}
-
 .users .voted {
     background: var(--card-voted-color);
-    transform: rotateZ(var(--card-angle)) translate(0%, 60%);
 }
 
-.users .allVoted.voted {
+.users .user.flipped {
     /* card is slightly elevated */
     box-shadow: inset 0 0 0 3px var(--white),
                 inset 0 0 0 4px var(--card-voted-color),
@@ -252,7 +248,6 @@ body {
 
 .users .user .vote {
     font-size: var(--card-vote-size);
-    color: var(--white);
 
     flex: 1 0 100%;
 }
@@ -265,5 +260,33 @@ body {
 
     .roomInfo {
         justify-content: center;
+    }
+
+    .login {
+        padding-top: 100px;
+    }
+
+    .login .logo {
+        font-size: 40px;
+    }
+
+    .login .login-form {
+        width: unset;
+    }
+
+    .login .username {
+        padding: 5px;
+    }
+
+    .votes .vote,
+    .users .user {
+        width: 50px;
+        height: 75px;
+        min-width: 50px;
+        font-size: 24px;
+    }
+
+    .users .user .vote {
+        font-size: 24px;
     }
 }
