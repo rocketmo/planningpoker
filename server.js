@@ -16,9 +16,10 @@ const io = new Server(server);
 const socketDataFieldName = '_data';
 
 // @TODO pull utilities into separate file
-function sendError(socket, msg) {
+function sendError(socket, msg, data = {}) {
     socket.emit('server_error', {
-        msg: msg 
+        msg: msg,
+        ...data
     });
 }
 
@@ -97,7 +98,7 @@ io.sockets.on('connection', function(socket) {
         if ( data && (roomName = data.roomName) ) {
             if (!roomExists(roomName)) {
                 console.log(socket.id, ': JOIN failed, room', roomName, 'does not exist');
-                return sendError(socket, 'Room with such name does not exist');
+                return sendError(socket, 'Room with such name does not exist', { roomName });
             }
         } else {
             roomName = generateRoomName();

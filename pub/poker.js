@@ -4,6 +4,15 @@ var _vm = function() {
     this.voteCardValues = [0, 0.5, 1, 2, 3, 5, 8, 13];
     this.isResetting = ko.observable(false);
 
+    this.joinRoomName = ko.observable();
+    this.joinRoomText = ko.computed(function() {
+        if (this.joinRoomName()) {
+            return 'Join ' + this.joinRoomName();
+        } else {
+            return 'Join Existing...';
+        }
+    }, this);
+
     // every user { id, name, vote() } 
     this.users = ko.observableArray();
     this.allVoted = ko.computed(function() {
@@ -18,13 +27,7 @@ var _vm = function() {
         });
 
         if (ret) {
-            // give it a nudge - since knockout doesn't do css vars, have to go thru DOM methods
-            document.querySelectorAll('.user.card').forEach(card => {
-                if (!card.style.getPropertyValue('--card-angle')) {
-                    const newCardAngle = (Math.round((Math.random() * 8) - 4)) + 'deg';
-                    card.style.setProperty('--card-angle', newCardAngle);
-                }
-            });
+            this.addRandomCardAngles();
         }
         return ret && !this.isResetting();
     }, this);
@@ -64,7 +67,13 @@ var _vm = function() {
         this.prepareSocket(() => {
             this.socketPreloaderVisible(false);
 
+            // Handle hash deeplinking
+            if (this.hasRoomInUrl()) {
+                this.joinRoomName(this.getRoomNameFromUrl());
+            }
+
             // TODO: Trigger focus on the input field
+            this.focusOnLoad();
         });
     };
 
@@ -82,6 +91,13 @@ var _vm = function() {
         this.socket.on('server_error', data => {
             alert('Server returned error: ' + data.msg);
             this.userNameLoaderVisible(false);
+
+            // Special handling:
+            // - if extra data includes a room name, remove from view model
+            if (data.roomName) {
+                this.resetUrl();
+                this.joinRoomName(undefined);
+            }
         });
 
         this.socket.on('error', function(data) {
@@ -97,6 +113,9 @@ var _vm = function() {
         });
 
         this.socket.on('joined', data => {
+            // add the room name to the URL for easy room sharing
+            this.updateUrlWithRoom(this.roomName());
+
             // skip ourselves
             if (data.id == this.userId()) { 
                 return;
@@ -135,10 +154,7 @@ var _vm = function() {
 
                 this.isResetting(false);
 
-                // clear the nudges - since knockout doesn't do css vars, have to go thru DOM methods
-                document.querySelectorAll('.userCard').forEach(card => {
-                    card.style.setProperty('--card-angle', '');
-                });
+                this.removeCardAngles();
 
                 this._reset = null;
             }, timeoutLength);
@@ -155,7 +171,7 @@ var _vm = function() {
     }
 
     this.login = function() {
-        // @TODO: check this one!
+        this.userName(this.userName().trim());
         if (!/^[a-z0-9-_]+$/i.test(this.userName())) {
             return alert('Username must be [a-z0-9-_\.]+'); 
         }
@@ -171,13 +187,9 @@ var _vm = function() {
         this.socket.emit('reset', { roomName: this.roomName() }); 
     }
 
-    this.showInviteDialog = function() {
-        alert('not implemented');
-    }
-
     // dom elements listeners
     this.onEnterClick = function() {
-        var rn = prompt("Enter room name");
+        var rn = this.joinRoomName() || prompt("Enter room name");
         if (!rn || /^\s*$/.test(rn)) {
             return;
         }
@@ -197,13 +209,56 @@ var _vm = function() {
     }
 
     this.onClickRoomNumber = function() {
-        navigator.clipboard.writeText(vm.roomName());
+        this.copyShareableUrl();
     }
 
     this.onVoteCardClick = function(vote) {
         vm.socket.emit('vote', { roomName: vm.roomName(), vote: vote });
     }
 
+    // URL handling - @TODO: chop into separate module
+    this.updateUrlWithRoom = function(toRoom) {
+        window.location = '#' + toRoom;
+    };
+
+    this.resetUrl = function() {
+        window.location = '';
+    };
+
+    this.copyShareableUrl = function(cb) {
+        window.navigator.clipboard.writeText(window.location);
+        cb && cb();
+    };
+
+    this.hasRoomInUrl = function() {
+        return !!document.location.hash.slice(0,4);
+    }
+
+    this.getRoomNameFromUrl = function() {
+        return document.location.hash.split('#')[1].slice(0,3);
+    }
+
+    // adv. DOM functions and animations
+    this.removeCardAngles = function() {
+        // clear the nudges - since knockout doesn't do css vars, have to go thru DOM methods
+        document.querySelectorAll('.user.card').forEach(card => {
+            card.style.setProperty('--card-angle', '');
+        });
+    };
+
+    this.addRandomCardAngles = function() {
+        // give it a nudge - since knockout doesn't do css vars, have to go thru DOM methods
+        document.querySelectorAll('.user.card').forEach(card => {
+            if (!card.style.getPropertyValue('--card-angle')) {
+                const newCardAngle = (Math.round((Math.random() * 8) - 4)) + 'deg';
+                card.style.setProperty('--card-angle', newCardAngle);
+            }
+        });
+    };
+
+    this.focusOnLoad = function() {
+        document.querySelector('input').focus();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

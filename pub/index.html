@@ -18,8 +18,8 @@
             <div class="login-form" data-bind="visible: !socketPreloaderVisible()">
                 <input type="text" class="username --with-shadow" placeholder="your username" 
                     data-bind="value: userName, css: { loading: userNameLoaderVisible }, attr: { disabled: userNameLoaderVisible }"/>
-                <button class="--with-shadow" data-bind="click: onCreateRoomClick, attr: { disabled: userNameLoaderVisible }">create new room</button>
-                <button class="--with-shadow" data-bind="click: onEnterClick, attr: { disabled: userNameLoaderVisible }">join existing</button>
+                <button class="--with-shadow" data-bind="click: onCreateRoomClick, attr: { disabled: userNameLoaderVisible }, visible: !joinRoomName()">create new room</button>
+                <button class="--with-shadow" data-bind="click: onEnterClick, attr: { disabled: userNameLoaderVisible }, text: joinRoomText()">join existing</button>
             </div>
         </div>
 
