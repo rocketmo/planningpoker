@@ -3,6 +3,7 @@ var _vm = function() {
 
     this.voteCardValues = [0, 0.5, 1, 2, 3, 5, 8, 13];
     this.isResetting = ko.observable(false);
+    this.isRevealed = ko.observable(false);
 
     this.joinRoomName = ko.observable();
     this.joinRoomText = ko.computed(function() {
@@ -13,7 +14,7 @@ var _vm = function() {
         }
     }, this);
 
-    // every user { id, name, vote() } 
+    // every user { id, name, vote() }
     this.users = ko.observableArray();
     this.allVoted = ko.computed(function() {
         if (this.users().length == 0) {
@@ -117,7 +118,7 @@ var _vm = function() {
             this.updateUrlWithRoom(this.roomName());
 
             // skip ourselves
-            if (data.id == this.userId()) { 
+            if (data.id == this.userId()) {
                 return;
             }
 
@@ -135,7 +136,7 @@ var _vm = function() {
 
         this.socket.on('reset', () => {
             // don't delay if all votes aren't tallied
-            const timeoutLength = this.allVoted() ? 500 : 0;
+            const timeoutLength = this.allVoted() || this.isRevealed() ? 500 : 0;
 
             if (!!this._reset) {
                 clearTimeout(this._reset);
@@ -146,7 +147,8 @@ var _vm = function() {
             // set resetting to true for a bit before removing scores
             // to handle card flip animation
             this.isResetting(true);
-            
+            this.isRevealed(false);
+
             this._reset = setTimeout(() => {
                 this.users().forEach(user => {
                     user && user.vote(undefined);
@@ -159,6 +161,11 @@ var _vm = function() {
                 this._reset = null;
             }, timeoutLength);
         });
+
+        this.socket.on('reveal', () => {
+            this.isRevealed(true);
+        });
+
         this._reset = null;
 
         this.socket.on('quit', data => {
@@ -173,7 +180,7 @@ var _vm = function() {
     this.login = function() {
         this.userName(this.userName().trim());
         if (!/^[a-z0-9-_]+$/i.test(this.userName())) {
-            return alert('Username must be [a-z0-9-_\.]+'); 
+            return alert('Username must be [a-z0-9-_\.]+');
         }
         this.userNameLoaderVisible(true);
         if (!this.userId()) {
@@ -184,7 +191,11 @@ var _vm = function() {
     }
 
     this.resetRoom = function() {
-        this.socket.emit('reset', { roomName: this.roomName() }); 
+        this.socket.emit('reset', { roomName: this.roomName() });
+    }
+
+    this.revealVotes = function() {
+        this.socket.emit('reveal', { roomName: this.roomName() });
     }
 
     // dom elements listeners
@@ -201,7 +212,7 @@ var _vm = function() {
     }
 
     this.onCreateRoomClick = function() {
-        this.onAfterLogin = () => { 
+        this.onAfterLogin = () => {
             this.socket.emit('join');
         };
         this.login();
@@ -263,6 +274,6 @@ var _vm = function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     ko.applyBindings(window.vm = new _vm());
-    vm.init(); 
+    vm.init();
     console.log('%cAPP READY', 'color: green');
 });

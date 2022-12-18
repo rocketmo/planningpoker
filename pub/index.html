@@ -16,7 +16,7 @@
             <div class="logo">Planning Poker</div>
             <div class="socketPreloader" data-bind="visible: socketPreloaderVisible">Connecting to server...</div>
             <div class="login-form" data-bind="visible: !socketPreloaderVisible()">
-                <input type="text" class="username --with-shadow" placeholder="your username" 
+                <input type="text" class="username --with-shadow" placeholder="your username"
                     data-bind="value: userName, css: { loading: userNameLoaderVisible }, attr: { disabled: userNameLoaderVisible }"/>
                 <button class="--with-shadow" data-bind="click: onCreateRoomClick, attr: { disabled: userNameLoaderVisible }, visible: !joinRoomName()">create new room</button>
                 <button class="--with-shadow" data-bind="click: onEnterClick, attr: { disabled: userNameLoaderVisible }, text: joinRoomText()">join existing</button>
@@ -27,6 +27,7 @@
             <div class="roomInfo">
                 <div class="btns">
                     <button class="--with-shadow" data-bind="click: resetRoom">Reset All Votes</button>
+                    <button class="--with-shadow" data-bind="click: revealVotes">Reveal Votes</button>
                 </div>
                 <div class="info">
                     Hello <span class="userName" data-bind="text: userName()"></span>, you're in room
@@ -37,7 +38,7 @@
                 <div class="vote card" tabindex="0" data-bind="text: $data, click: $parent.onVoteCardClick"></div>
             </div>
             <div class="users area" data-bind="foreach: users">
-                <div class="user card" data-bind="css: { voted: $data.vote() !== undefined , flipped: $parent.allVoted()}">
+                <div class="user card" data-bind="css: { voted: $data.vote() !== undefined , flipped: $parent.allVoted() || $parent.isRevealed() }">
                     <div class="front">
                         <div class="vote" data-bind="text: $data.vote() !== undefined ? +$data.vote() : '?'"></div>
                     </div>

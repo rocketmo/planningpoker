@@ -55,12 +55,12 @@ function generateRoomName() {
 }
 
 function isAuthorized(socket) {
-    return socket[socketDataFieldName] ? !!socket[socketDataFieldName].name : false; 
+    return socket[socketDataFieldName] ? !!socket[socketDataFieldName].name : false;
 }
 
 function roomExists(roomName) {
     console.log('Available Rooms (incl private lobbies) =', io.sockets.adapter.rooms.keys());
-    if (roomName == '') { 
+    if (roomName == '') {
         return false; // no access to empty room
     }
     return !!io.sockets.adapter.rooms.get(roomName);
@@ -140,9 +140,9 @@ io.sockets.on('connection', function(socket) {
 
         const voteData = getData(socket, ['id']);
         voteData.vote = vote;
-        io.sockets.in(roomName).emit('user_voted', voteData); 
+        io.sockets.in(roomName).emit('user_voted', voteData);
     });
-    
+
     socket.on('reset', function(data) {
         if (!isAuthorized(socket)) {
             return sendError(socket, 'Not authorized');
@@ -153,8 +153,22 @@ io.sockets.on('connection', function(socket) {
         if (!isUserIn(socket, roomName)) {
             return sendError(socket, `You are not in room '${roomName}'`);
         }
-        setData(socket, { vote: undefined });
+        setData(socket, { vote: undefined, isRevealed: false });
         io.sockets.in(roomName).emit('reset', getData(socket, ['id']));
+    });
+
+    socket.on('reveal', function(data) {
+        if (!isAuthorized(socket)) {
+            return sendError(socket, 'Not authorized');
+        }
+
+        if (!data) { return; }
+        const roomName = data.roomName;
+        if (!isUserIn(socket, roomName)) {
+            return sendError(socket, `You are not in room '${roomName}'`);
+        }
+        setData(socket, { isRevealed: true });
+        io.sockets.in(roomName).emit('reveal', getData(socket, ['id']));
     });
 
     socket.on('disconnecting', function() {
@@ -163,11 +177,11 @@ io.sockets.on('connection', function(socket) {
         }
 
         io.sockets.adapter.rooms.forEach(function(value, key) {
-            // find all rooms where client was ... 
+            // find all rooms where client was ...
             if (io.sockets.adapter.rooms.get(key).has(socket.id)) {
                 // ...& quit the room (emit to client to clean up the UI)
                 console.log(socket.id, ': DISCONNECT leaving from room', key);
-                io.sockets.in(key).emit('quit', getData(socket, ['id']));    
+                io.sockets.in(key).emit('quit', getData(socket, ['id']));
             }
         })
     });
