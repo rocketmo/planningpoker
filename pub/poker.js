@@ -27,11 +27,20 @@ var _vm = function() {
             }
         });
 
-        if (ret) {
-            this.addRandomCardAngles();
-        }
         return ret && !this.isResetting();
     }, this);
+
+    this.allVoted.subscribe((newAllVotedValue) => {
+        if (newAllVotedValue) {
+            this.isRevealed(true);
+        }
+    });
+
+    this.isRevealed.subscribe((newIsRevealedValue) => {
+        if (newIsRevealedValue) {
+            this.addRandomCardAngles();
+        }
+    });
 
     this.userName = ko.observable();
     this.userId = ko.observable();
@@ -136,7 +145,7 @@ var _vm = function() {
 
         this.socket.on('reset', () => {
             // don't delay if all votes aren't tallied
-            const timeoutLength = this.allVoted() || this.isRevealed() ? 500 : 0;
+            const timeoutLength = this.isRevealed() ? 500 : 0;
 
             if (!!this._reset) {
                 clearTimeout(this._reset);
